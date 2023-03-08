@@ -1,0 +1,30 @@
+image: google/cloud-sdk:alpine
+
+deploy_production:
+  stage: deploy
+  environment: Production
+  only:
+  - master
+  script:
+  - echo $SERVICE_ACCOUNT > /tmp/$CI_PIPELINE_ID.json
+  - touch .env
+  - echo $JWTSECRET >> .env
+  - gcloud auth activate-service-account --key-file /tmp/$CI_PIPELINE_ID.json
+  - gcloud --quiet --project $PROJECT_ID app deploy app.yaml
+
+deploy_staging:
+  stage: deploy
+  environment: Production
+  only:
+  - development
+  script:
+  - echo $SERVICE_ACCOUNT_STAGING > /tmp/$CI_PIPELINE_ID.json
+  - touch .env
+  - echo $MONGO_PASSWORD >> .env
+  - echo $JWTsecret1 >> .env
+  - echo $JWTsecret2 >> .env
+  - gcloud auth activate-service-account gitlab-staging@canvas-psych-server.iam.gserviceaccount.com --key-file /tmp/$CI_PIPELINE_ID.json
+  - gcloud --quiet --project canvas-psych-server app deploy staging-app.yaml
+
+after_script:
+- rm /tmp/$CI_PIPELINE_ID.json
